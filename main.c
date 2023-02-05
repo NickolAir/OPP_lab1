@@ -4,6 +4,7 @@
 #include <stdlib.h>
 
 #define E 0.00001
+#define t 0.01
 
 double **create_matrix (int N){
     double **A = (double **)malloc(N * sizeof(double*));
@@ -43,8 +44,32 @@ int convergence (double **A, double *b, int N){
     return 1;
 }
 
-void simple_iteration (double **A, double *b, int N){
+double *simple_iteration (double **A, double *b, int N, double *x, double *new_x){
+    for (int i = 0; i < N; ++i) {
+        double tmp_sum = 0;
+        for (int j = 0; j < N; ++j) {
+            if (i != j){
+                tmp_sum -= A[i][j] * x[j];
+            }
+        }
+        tmp_sum += b[i];
+        new_x[i] = tmp_sum / 2.0;
+    }
+    return new_x;
+}
 
+int criterion (double **A, double *b, int N, double *x){
+    for (int i = 0; i < N; ++i) {
+        double tmp_sum = 0;
+        for (int j = 0; j < N; ++j) {
+            tmp_sum += A[i][j] * x[j];
+        }
+        tmp_sum -= b[i];
+        tmp_sum /= b[i];
+        if (tmp_sum < E)
+            return 1;
+    }
+    return 0;
 }
 
 int main(int argc, char** argv) {
