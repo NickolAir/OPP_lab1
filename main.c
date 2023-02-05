@@ -1,6 +1,9 @@
 #include <mpi.h>
 #include <stdio.h>
 #include <malloc.h>
+#include <stdlib.h>
+
+#define E 0.00001
 
 double **create_matrix (int N){
     double **A = (double **)malloc(N * sizeof(double*));
@@ -9,7 +12,7 @@ double **create_matrix (int N){
     }
     for (int i = 0; i < N; ++i) {
         for (int j = 0; j < N; ++j) {
-            if(i == j)
+            if (i == j)
                 A[i][j] = 2.0;
             else
                 A[i][j] = 1.0;
@@ -22,6 +25,26 @@ void delete_matrix (double **A, int N){
         free(A[i]);
     }
     free(A);
+}
+//условие на сходимость
+int convergence (double **A, double *b, int N){
+    for (int i = 0; i < N; ++i) {
+        double summ = 0;
+        for (int j = 0; j < N; ++j) {
+            if (i != j){
+                summ += A[i][j];
+            }
+        }
+        summ += b[i];
+        if (A[i][i] <= summ){
+            return -1;
+        }
+    }
+    return 1;
+}
+
+void simple_iteration (double **A, double *b, int N){
+
 }
 
 int main(int argc, char** argv) {
