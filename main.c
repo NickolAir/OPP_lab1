@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <malloc.h>
 #include <stdlib.h>
+#include <math.h>
 
 #define E 0.00001
 #define t 0.01
@@ -57,7 +58,7 @@ double *simple_iteration (double **A, double *b, int N, double *x, double *new_x
     }
     return new_x;
 }
-
+//критерий окончания итераций, через эпсилон
 int criterion (double **A, double *b, int N, double *x){
     for (int i = 0; i < N; ++i) {
         double tmp_sum = 0;
@@ -72,10 +73,18 @@ int criterion (double **A, double *b, int N, double *x){
     return 0;
 }
 
+double normVector (double *vector, int N){
+    double norm = 0;
+    for (int i = 0; i < N; ++i) {
+        norm += vector[i] * vector[i];
+    }
+    norm = sqrt(norm);
+    return norm;
+}
+
 int main(int argc, char** argv) {
 
-
-    /*// Initialize the MPI environment
+    // Initialize the MPI environment
     MPI_Init(NULL, NULL);
 
     // Get the number of processes
@@ -96,5 +105,5 @@ int main(int argc, char** argv) {
            processor_name, world_rank, world_size);
 
     // Finalize the MPI environment.
-    MPI_Finalize();*/
+    MPI_Finalize();
 }
