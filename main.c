@@ -90,9 +90,7 @@ int main(int argc,char *argv[]){
     {
         startwtime = MPI_Wtime();
     }
-
     printf("Hello from process #%d of %d\n",rank,numprocs);
-
     if (rank == 0)
     {
         printf("%Lf\n", Result);
