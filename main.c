@@ -6,6 +6,37 @@
 #define E 0.00001
 #define t 0.01
 
+void print_vector (double *vect, int N){
+    for (int i = 0; i < N; ++i) {
+        printf("%f ", vect[i]);
+    }
+    printf("\n");
+}
+
+void print_matrix (double **A, int N){
+    for (int i = 0; i < N; ++i) {
+        print_vector(A[i], N);
+    }
+}
+
+double sqrt(double n) {
+    const double epsilon = 0.000001;
+    double sqrt = 0, root = 0;
+    while (sqrt < n) {
+        root += epsilon;
+        sqrt = root * root;
+    }
+    return sqrt;
+}
+
+double *create_vector (int N){
+    double *vect = (double*) malloc(N * sizeof(double));
+    for (int i = 0; i < N; ++i) {
+        vect[i] = N + 1;
+    }
+    return vect;
+}
+
 double **create_matrix (int N){
     double **A = (double **)malloc(N * sizeof(double*));
     for (int i = 0; i < N; ++i) {
@@ -19,6 +50,7 @@ double **create_matrix (int N){
                 A[i][j] = 1.0;
         }
     }
+    return A;
 }
 
 void delete_matrix (double **A, int N){
@@ -44,7 +76,8 @@ int convergence (double **A, double *b, int N){
     return 1;
 }
 
-double *simple_iteration (double **A, double *b, int N, double *x, double *new_x){
+double *simple_iteration (double **A, double *b, int N, double *x){
+    double new_x[N];
     for (int i = 0; i < N; ++i) {
         double tmp_sum = x[i];
         for (int j = 0; j < N; ++j) {
@@ -57,19 +90,39 @@ double *simple_iteration (double **A, double *b, int N, double *x, double *new_x
     }
     return new_x;
 }
-//критерий окончания итераций, через эпсилон
-int criterion (double **A, double *b, int N, double *x){
+
+double *multiplication (double **A, int N, double *x){
+    double new_x[N];
     for (int i = 0; i < N; ++i) {
         double tmp_sum = 0;
         for (int j = 0; j < N; ++j) {
             tmp_sum += A[i][j] * x[j];
         }
-        tmp_sum -= b[i];
-        tmp_sum /= b[i];
-        if (tmp_sum < E)
-            return 1;
+        new_x[i] = tmp_sum;
     }
-    return 0;
+    return new_x;
+}
+
+double norm (double *vector, int N){
+    double res = 0;
+    for (int i = 0; i < N; ++i) {
+        res += vector[i] * vector[i];
+    }
+    return sqrt(res);
+}
+
+//критерий окончания итераций, через эпсилон
+int criterion (double **A, double *b, int N, double *x_n){
+    double *Ax = multiplication(A, N, x_n);
+    for (int i = 0; i < N; ++i) {
+        Ax[i] -= b[i];
+    }
+    double result = norm(Ax, N) / norm(b, N);
+    if (result < E){
+        return 1;
+    } else {
+        return 0;
+    }
 }
 
 int main(int argc,char *argv[]){
@@ -79,7 +132,15 @@ int main(int argc,char *argv[]){
     double endwtime;
     int numprocs,rank;
 
-    if (rc = MPI_Init(&argc, &argv))
+    int N = 3;
+    double **Matrix = create_matrix(N);
+    double *vector = create_vector(N);
+    double *res = multiplication(Matrix, N, vector);
+    print_matrix(Matrix, N);
+
+    print_vector(res, N);
+
+/*    if (rc = MPI_Init(&argc, &argv))
     {
         printf("Ошибка запуска, выполнение остановлено\n");
         MPI_Abort(MPI_COMM_WORLD, rc);
@@ -98,5 +159,5 @@ int main(int argc,char *argv[]){
         printf("%lf\n", (endwtime-startwtime)*1000);
     }
     MPI_Finalize(); // Завершение работы MPI
-    return 0;
+    return 0;*/
 }
