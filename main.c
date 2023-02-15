@@ -133,18 +133,19 @@ int criterion (double **A, double *b, int N, double *x_n){
     }
 }
 
+void solution (double **Matrix, double *b, double *x, int N){
+
+}
+
 int main(int argc,char *argv[]){
-    int rc;
-    long double drob,drobSum = 0, Result = 0, sum;
-    double startwtime = 0.0;
-    double endwtime;
-    int numprocs,rank;
+    int rc, numprocs, rank;
+    double start_time = 0.0;
+    double end_time;
 
     int N = 3;
     double **Matrix = create_matrix(N);
     double *vector = create_vector(N);
     double *x0 = create_x0(N);
-    printf("%d ", criterion(Matrix, vector, N, x0));
 
     while (criterion(Matrix, vector, N, x0) == 0){
         x0 = simple_iteration(Matrix, vector, N, x0);
@@ -155,24 +156,26 @@ int main(int argc,char *argv[]){
     free(x0);
     delete_matrix(Matrix, N);
 
-/*    if (rc = MPI_Init(&argc, &argv))
-    {
+    if (rc = MPI_Init(&argc, &argv)){
         printf("Ошибка запуска, выполнение остановлено\n");
         MPI_Abort(MPI_COMM_WORLD, rc);
     }
     MPI_Comm_size(MPI_COMM_WORLD,&numprocs); // Получение числа процессов
-    MPI_Comm_rank(MPI_COMM_WORLD,&rank); // Получение номера процесса
-    if (rank == 0)
-    {
-        startwtime = MPI_Wtime();
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank); // Получение номера процесса
+    int range = N / numprocs;
+    if (rank == 0){
+        start_time = MPI_Wtime();
+        for (int to_thread = 1; to_thread < numprocs; to_thread++){
+            MPI_Send(&range, 1, MPI_INT, to_thread, 0, MPI_COMM_WORLD);
+        }
+
+        start_time = MPI_Wtime();// Начинаем считать время выполнения
     }
-    printf("Hello from process #%d of %d\n",rank,numprocs);
-    if (rank == 0)
-    {
-        printf("%Lf\n", Result);
-        endwtime = MPI_Wtime();
-        printf("%lf\n", (endwtime-startwtime)*1000);
+    //code
+    if (rank == 0){
+        end_time = MPI_Wtime();
+        printf("%lf\n", (end_time-start_time)*1000);
     }
     MPI_Finalize(); // Завершение работы MPI
-    return 0;*/
+    return 0;
 }
