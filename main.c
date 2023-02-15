@@ -138,7 +138,7 @@ void solution (double **Matrix, double *b, double *x, int N){
 }
 
 int main(int argc,char *argv[]){
-    int rc, numprocs, rank;
+    int erc, numprocs, rank;
     double start_time = 0.0;
     double end_time;
 
@@ -156,21 +156,32 @@ int main(int argc,char *argv[]){
     free(x0);
     delete_matrix(Matrix, N);
 
-    if (rc = MPI_Init(&argc, &argv)){
+    if (erc = MPI_Init(&argc, &argv)){
         printf("Ошибка запуска, выполнение остановлено\n");
-        MPI_Abort(MPI_COMM_WORLD, rc);
+        MPI_Abort(MPI_COMM_WORLD, erc);
     }
     MPI_Comm_size(MPI_COMM_WORLD,&numprocs); // Получение числа процессов
     MPI_Comm_rank(MPI_COMM_WORLD, &rank); // Получение номера процесса
     int range = N / numprocs;
     if (rank == 0){
         start_time = MPI_Wtime();
-        for (int to_thread = 1; to_thread < numprocs; to_thread++){
-            MPI_Send(&range, 1, MPI_INT, to_thread, 0, MPI_COMM_WORLD);
+        if (N % numprocs == 0){
+            for (int to_thread = 1; to_thread < numprocs; to_thread++){
+                MPI_Send(&range, 1, MPI_INT, to_thread, 0, MPI_COMM_WORLD);
+            }
+        } else {
+            for (int to_thread = 1; to_thread < numprocs - 1; to_thread++){
+                MPI_Send(&range, 1, MPI_INT, to_thread, 0, MPI_COMM_WORLD);
+            }
+            range += N - range * numprocs;
+            MPI_Send(&range, 1, MPI_INT, numprocs - 1, 0, MPI_COMM_WORLD);
         }
 
         start_time = MPI_Wtime();// Начинаем считать время выполнения
     }
+    //status - структура, определенная в MPI которая хранит информацию о пересылке и статус ее завершения.
+    MPI_Status status;
+
     //code
     if (rank == 0){
         end_time = MPI_Wtime();
