@@ -37,6 +37,14 @@ double *create_vector (int N){
     return vect;
 }
 
+double *create_x0 (int N){
+    double *vect = (double*) malloc(N * sizeof(double));
+    for (int i = 0; i < N; ++i) {
+        vect[i] = 0;
+    }
+    return vect;
+}
+
 double **create_matrix (int N){
     double **A = (double **)malloc(N * sizeof(double*));
     for (int i = 0; i < N; ++i) {
@@ -77,7 +85,7 @@ int convergence (double **A, double *b, int N){
 }
 
 double *simple_iteration (double **A, double *b, int N, double *x){
-    double new_x[N];
+    double *new_x = (double*) malloc(sizeof(double) * N);
     for (int i = 0; i < N; ++i) {
         double tmp_sum = x[i];
         for (int j = 0; j < N; ++j) {
@@ -86,13 +94,13 @@ double *simple_iteration (double **A, double *b, int N, double *x){
             }
         }
         tmp_sum += b[i] * t;
-        new_x[i] = tmp_sum / 2.0;
+        new_x[i] = tmp_sum;
     }
     return new_x;
 }
 
 double *multiplication (double **A, int N, double *x){
-    double new_x[N];
+    double *new_x = (double*) malloc(sizeof(double) * N);
     for (int i = 0; i < N; ++i) {
         double tmp_sum = 0;
         for (int j = 0; j < N; ++j) {
@@ -119,8 +127,10 @@ int criterion (double **A, double *b, int N, double *x_n){
     }
     double result = norm(Ax, N) / norm(b, N);
     if (result < E){
+        free(Ax);
         return 1;
     } else {
+        free(Ax);
         return 0;
     }
 }
@@ -135,10 +145,17 @@ int main(int argc,char *argv[]){
     int N = 3;
     double **Matrix = create_matrix(N);
     double *vector = create_vector(N);
-    double *res = multiplication(Matrix, N, vector);
-    print_matrix(Matrix, N);
+    double *x0 = create_x0(N);
+    printf("%d ", criterion(Matrix, vector, N, x0));
 
-    print_vector(res, N);
+    while (criterion(Matrix, vector, N, x0) == 0){
+        x0 = simple_iteration(Matrix, vector, N, x0);
+        print_vector(x0, N);
+    }
+
+    free(vector);
+    free(x0);
+    delete_matrix(Matrix, N);
 
 /*    if (rc = MPI_Init(&argc, &argv))
     {
