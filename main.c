@@ -89,9 +89,7 @@ double *simple_iteration (double **A, double *b, int N, double *x){
     for (int i = 0; i < N; ++i) {
         double tmp_sum = x[i];
         for (int j = 0; j < N; ++j) {
-            if (i != j){
                 tmp_sum -= A[i][j] * x[j] * t;
-            }
         }
         tmp_sum += b[i] * t;
         new_x[i] = tmp_sum;
