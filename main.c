@@ -4,7 +4,6 @@
 #include <stdlib.h>
 #include "multiply.h"
 #include "subtract.h"
-#include <time.h>
 
 #define E 0.00001
 #define t 0.01
@@ -93,18 +92,6 @@ double *simple_iteration (double *Ax, double *b, int N, double *x){
     return x;
 }
 
-double *multiplication (double **A, int N, double *x){
-    double *new_x = (double*) malloc(sizeof(double) * N);
-    for (int i = 0; i < N; ++i) {
-        double tmp_sum = 0;
-        for (int j = 0; j < N; ++j) {
-            tmp_sum += A[i][j] * x[j];
-        }
-        new_x[i] = tmp_sum;
-    }
-    return new_x;
-}
-
 double norm (double *vector, int N){
     double res = 0;
     for (int i = 0; i < N; ++i) {
@@ -125,8 +112,6 @@ int criterion (double *Ax, double *b, int N){
 }
 
 int main(int argc,char *argv[]){
-    int rc;
-    long double drob,drobSum = 0, Result = 0, sum;
     double startwtime = 0.0;
     double endwtime;
     int numprocs,rank;
@@ -136,19 +121,20 @@ int main(int argc,char *argv[]){
     double *vector = create_vector(N);
     double *x0 = create_x0(N);
 
+    MPI_Init(&argc, &argv);
+    MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+    MPI_Scatter(Matrix, (int)N / numprocs, MPI_DOUBLE, );
+
     double *Ax = multiply(Matrix, N, x0);
 
-    clock_t begin = clock();
     while (criterion(Ax, vector, N) == 0){
         x0 = simple_iteration(Ax, vector, N, x0);
-        //print_vector(x0, N);
         Ax = multiply(Matrix, N, x0);
     }
     print_vector(x0, N);
-    clock_t end = clock();
-    double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
 
-    printf("The elapsed time is %f seconds", time_spent);
     free(vector);
     free(x0);
     delete_matrix(Matrix, N);
