@@ -112,8 +112,8 @@ int criterion (double *Ax, double *b, int N){
 }
 
 int main(int argc,char *argv[]){
-    double startwtime = 0.0;
-    double endwtime;
+    double start_time = 0.0;
+    double end_time;
     int numprocs,rank;
 
     int N = 3;
@@ -124,8 +124,20 @@ int main(int argc,char *argv[]){
     MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-
-    MPI_Scatter(Matrix, (int)N / numprocs, MPI_DOUBLE, );
+    int range = N / numprocs;
+//    if (rank == 0) {
+//        if (N % numprocs == 0) {
+//            for (int to_thread = 0; to_thread < numprocs; to_thread++) {
+//                MPI_Send(&range, 1, MPI_INT, to_thread, 1, MPI_COMM_WORLD);
+//            }
+//        } else {
+//            for (int to_thread = 0; to_thread < numprocs - 1; to_thread++) {
+//                MPI_Send(&range, 1, MPI_INT, to_thread, 1, MPI_COMM_WORLD);
+//            }
+//            range += N - range * numprocs;
+//            MPI_Send(&range, 1, MPI_INT, numprocs - 1, 1, MPI_COMM_WORLD);
+//        }
+//    }
 
     double *Ax = multiply(Matrix, N, x0);
 
@@ -133,7 +145,11 @@ int main(int argc,char *argv[]){
         x0 = simple_iteration(Ax, vector, N, x0);
         Ax = multiply(Matrix, N, x0);
     }
-    print_vector(x0, N);
+
+    if (rank == 0) {
+        print_vector(x0, N);
+    }
+    MPI_Finalize();
 
     free(vector);
     free(x0);
