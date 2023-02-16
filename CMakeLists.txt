@@ -6,4 +6,4 @@ include_directories(/usr/include/x86_64-linux-gnu/mpich)
 set(CMAKE_C_COMPILER "/usr/bin/mpicc")
 set(CMAKE_CXX_COMPILER "/usr/bin/mpic++")
 
-add_executable(OPP_lab1 main.c)
+add_executable(OPP_lab1 main.c multiply.h multiply.c subtract.h subtract.c)
