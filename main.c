@@ -86,7 +86,7 @@ int convergence (double **A, double *b, int N){
     return 1;
 }
 
-double *simple_iteration (double *Ax, double *b, int N, double *x){
+double *simple_iteration (double *Ax, int N, double *x){
     mult_on_const(Ax, N, t);
     subtract(x, Ax, N);
     return x;
@@ -139,15 +139,19 @@ int main(int argc,char *argv[]){
 //        }
 //    }
 
-    double *Ax = multiply(Matrix, N, x0);
+//    double *Ax = multiply(Matrix, N, x0);
+//
+//    while (criterion(Ax, vector, N) == 0){
+//        x0 = simple_iteration(Ax, N, x0);
+//        Ax = multiply(Matrix, N, x0);
+//    }
 
-    while (criterion(Ax, vector, N) == 0){
-        x0 = simple_iteration(Ax, vector, N, x0);
-        Ax = multiply(Matrix, N, x0);
-    }
+    double *A = (double*) malloc(N * N * sizeof(double));
+    mult_on_vector(A, x0, N, rank, numprocs);
+    print_vector(A, N * N);
 
     if (rank == 0) {
-        print_vector(x0, N);
+        //print_vector(x0, N);
     }
     MPI_Finalize();
 
