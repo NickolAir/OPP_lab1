@@ -1,12 +1,13 @@
 #include <mpi.h>
 #include <stdio.h>
-#include <malloc.h>
 #include <stdlib.h>
 #include "multiply.h"
 #include "subtract.h"
 
 #define E 0.00001
 #define t 0.01
+#define ROOT 0
+#define DEFAULT 3
 
 void print_vector (double *vect, int N){
     for (int i = 0; i < N; ++i) {
@@ -37,7 +38,7 @@ double sqrt(double n) {
     return sqrt;
 }
 
-double *create_vector (int N){
+double *create_vectorB (int N){
     double *vect = (double*) malloc(N * sizeof(double));
     for (int i = 0; i < N; ++i) {
         vect[i] = N + 1;
@@ -68,7 +69,7 @@ double *create_matrix (int N){
 }
 
 //условие на сходимость. Если выполняется, то t со знаком +, иначе t со знаком -
-int convergence (double *A, double *b, int N){
+int convergence (const double *A, const double *b, int N){
     int line = 0;
     for (int i = 0; i < N; ++i) {
         double summ = 0;
@@ -110,34 +111,46 @@ int criterion (double *Ax, double *b, int N){
     }
 }
 
-int main(int argc,char *argv[]){
+int main(int argc, char *argv[]){
     double start_time = 0.0;
     double end_time;
     int numprocs, rank;
+    int N = DEFAULT;
 
-    int N = 9;
+    if (argc == 2){
+        N = atoi(argv[1]);
+    }
 
-    MPI_Init(&argc, &argv);
+    int erc = MPI_Init(NULL, NULL);
+    if (erc){
+        MPI_Abort(MPI_COMM_WORLD, erc);
+    }
     MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    int range = N / numprocs;
+
+    if (rank == ROOT){
+        start_time = MPI_Wtime();
+    }
 
     double *Matrix = create_matrix(N);
-    double *vector_b = create_vector(N);
+    double *vector_b = create_vectorB(N);
     double *x0 = create_x0(N);
+    double *res = (double*) malloc(N * sizeof(double));
 
-    double *Ax = mult_on_vector(Matrix, x0, N, rank, numprocs);
-    while (criterion(Ax, vector_b, N) == 0){
-        x0 = simple_iteration(Ax, N, x0);
-        Ax = mult_on_vector(Matrix, x0, N, rank, numprocs);
+    mult_on_vector(Matrix, x0, N, rank, numprocs, res);
+    while (criterion(res, vector_b, N) == 0){
+        x0 = simple_iteration(res, N, x0);
+        mult_on_vector(Matrix, x0, N, rank, numprocs, res);
     }
 
-    if (rank == 0){
+    if (rank == ROOT){
         print_vector(x0, N);
-        free(Matrix);
-        free(vector_b);
-        free(x0);
-        free(Ax);
+        end_time = MPI_Wtime();
+        printf("TIME: %lf\n", end_time - start_time);
     }
+    free(Matrix);
+    free(vector_b);
+    free(x0);
+    free(res);
     MPI_Finalize();
 }
