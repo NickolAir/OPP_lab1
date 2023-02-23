@@ -115,38 +115,29 @@ int main(int argc,char *argv[]){
     double end_time;
     int numprocs, rank;
 
-    int N = 3;
+    int N = 9;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     int range = N / numprocs;
 
-//    double *Ax = multiply(Matrix, N, x0);
-//
-//    while (criterion(Ax, vector, N) == 0){
-//        x0 = simple_iteration(Ax, N, x0);
-//        Ax = multiply(Matrix, N, x0);
-//    }
-
     double *Matrix = create_matrix(N);
     double *vector_b = create_vector(N);
     double *x0 = create_x0(N);
 
     double *Ax = mult_on_vector(Matrix, x0, N, rank, numprocs);
-    criterion(Ax, vector_b, N);
-    x0 = simple_iteration(Ax, N, x0);
-    Ax = mult_on_vector(Matrix, x0, N, rank, numprocs);
-
-    criterion(Ax, vector_b, N);
-    x0 = simple_iteration(Ax, N, x0);
-    Ax = mult_on_vector(Matrix, x0, N, rank, numprocs);
+    while (criterion(Ax, vector_b, N) == 0){
+        x0 = simple_iteration(Ax, N, x0);
+        Ax = mult_on_vector(Matrix, x0, N, rank, numprocs);
+    }
 
     if (rank == 0){
         print_vector(x0, N);
         free(Matrix);
         free(vector_b);
         free(x0);
+        free(Ax);
     }
     MPI_Finalize();
 }
