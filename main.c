@@ -15,10 +15,16 @@ void print_vector (double *vect, int N){
     printf("\n");
 }
 
-void print_matrix (double **A, int N){
-    for (int i = 0; i < N; ++i) {
-        print_vector(A[i], N);
+void print_matrix (double *A, int N){
+    int line = 1;
+    for (int i = 0; i < N * N; ++i) {
+        printf("%f ", A[i]);
+        if (i == line * N - 1){
+            printf("\n");
+            line++;
+        }
     }
+    printf("\n");
 }
 
 double sqrt(double n) {
@@ -47,39 +53,32 @@ double *create_x0 (int N){
     return vect;
 }
 
-double **create_matrix (int N){
-    double **A = (double **)malloc(N * sizeof(double*));
-    for (int i = 0; i < N; ++i) {
-        A[i] = (double*) malloc(N * sizeof(double));
-    }
-    for (int i = 0; i < N; ++i) {
-        for (int j = 0; j < N; ++j) {
-            if (i == j)
-                A[i][j] = 2.0;
-            else
-                A[i][j] = 1.0;
+double *create_matrix (int N){
+    int line = 0;
+    double *A = (double*) malloc(N * N * sizeof(double));
+    for (int i = 0; i < N * N; ++i) {
+        if (i == line * N + line){
+            A[i] = 2.0;
+            line++;
+        }else{
+            A[i] = 1.0;
         }
     }
     return A;
 }
 
-void delete_matrix (double **A, int N){
-    for (int i = 0; i < N; ++i) {
-        free(A[i]);
-    }
-    free(A);
-}
 //условие на сходимость. Если выполняется, то t со знаком +, иначе t со знаком -
-int convergence (double **A, double *b, int N){
+int convergence (double *A, double *b, int N){
+    int line = 0;
     for (int i = 0; i < N; ++i) {
         double summ = 0;
         for (int j = 0; j < N; ++j) {
-            if (i != j){
-                summ += A[i][j];
+            if (i != line * N + line){
+                summ += A[i * N + j];
             }
         }
         summ += b[i];
-        if (A[i][i] <= summ){
+        if (A[line * N + line] <= summ){
             return -1;
         }
     }
@@ -92,7 +91,7 @@ double *simple_iteration (double *Ax, int N, double *x){
     return x;
 }
 
-double norm (double *vector, int N){
+double norm (const double *vector, int N){
     double res = 0;
     for (int i = 0; i < N; ++i) {
         res += vector[i] * vector[i];
@@ -114,30 +113,14 @@ int criterion (double *Ax, double *b, int N){
 int main(int argc,char *argv[]){
     double start_time = 0.0;
     double end_time;
-    int numprocs,rank;
+    int numprocs, rank;
 
     int N = 3;
-    double **Matrix = create_matrix(N);
-    double *vector = create_vector(N);
-    double *x0 = create_x0(N);
 
     MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     int range = N / numprocs;
-//    if (rank == 0) {
-//        if (N % numprocs == 0) {
-//            for (int to_thread = 0; to_thread < numprocs; to_thread++) {
-//                MPI_Send(&range, 1, MPI_INT, to_thread, 1, MPI_COMM_WORLD);
-//            }
-//        } else {
-//            for (int to_thread = 0; to_thread < numprocs - 1; to_thread++) {
-//                MPI_Send(&range, 1, MPI_INT, to_thread, 1, MPI_COMM_WORLD);
-//            }
-//            range += N - range * numprocs;
-//            MPI_Send(&range, 1, MPI_INT, numprocs - 1, 1, MPI_COMM_WORLD);
-//        }
-//    }
 
 //    double *Ax = multiply(Matrix, N, x0);
 //
@@ -146,16 +129,24 @@ int main(int argc,char *argv[]){
 //        Ax = multiply(Matrix, N, x0);
 //    }
 
-    double *A = (double*) malloc(N * N * sizeof(double));
-    mult_on_vector(A, x0, N, rank, numprocs);
-    print_vector(A, N * N);
+    double *Matrix = create_matrix(N);
+    double *vector_b = create_vector(N);
+    double *x0 = create_x0(N);
 
-    if (rank == 0) {
-        //print_vector(x0, N);
+    double *Ax = mult_on_vector(Matrix, x0, N, rank, numprocs);
+    criterion(Ax, vector_b, N);
+    x0 = simple_iteration(Ax, N, x0);
+    Ax = mult_on_vector(Matrix, x0, N, rank, numprocs);
+
+    criterion(Ax, vector_b, N);
+    x0 = simple_iteration(Ax, N, x0);
+    Ax = mult_on_vector(Matrix, x0, N, rank, numprocs);
+
+    if (rank == 0){
+        print_vector(x0, N);
+        free(Matrix);
+        free(vector_b);
+        free(x0);
     }
     MPI_Finalize();
-
-    free(vector);
-    free(x0);
-    delete_matrix(Matrix, N);
 }

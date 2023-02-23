@@ -3,8 +3,8 @@
 
 double *mult_on_vector(double *line, double *x, int N, int rank, int numprocs){
     double sum;
-    double *new_x = (double*) malloc(sizeof(double) * N);
     double *tmp_line = (double*) malloc(sizeof(double) * N);
+    double *new_x = (double*) malloc(sizeof(double) * N );
     int range = N / numprocs;
     double *tmp_res = (double*) malloc(range * sizeof(double));
 
@@ -21,7 +21,7 @@ double *mult_on_vector(double *line, double *x, int N, int rank, int numprocs){
     MPI_Gather(tmp_res, range, MPI_DOUBLE, new_x, range, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
     for (int i = range * numprocs; i < N; ++i) {
-        if (rank == 0 && i%numprocs != 0){
+        if (rank == 0 && i % numprocs != 0){
             MPI_Recv(&new_x[i], 1, MPI_DOUBLE, MPI_ANY_SOURCE, 123, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         }
         if (rank == i % numprocs){
