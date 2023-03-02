@@ -4,7 +4,7 @@
 #include <math.h>
 
 #define E 0.00001
-#define t 0.0001
+#define t 0.00001
 #define ROOT 0
 #define DEFAULT 3
 
@@ -180,7 +180,7 @@ void ResultReplySub(double* proc_x, double* res, int size, int numprocs, int ran
 }
 
 int main(int argc, char *argv[]) {
-    double *Matrix;
+    double *Matrix = NULL;
     double* x0;
     double* vectorB;
     double* result;
