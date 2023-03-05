@@ -230,17 +230,17 @@ int main(int argc, char *argv[]) {
     }
 
     int crit = 0;
+    DataDistribution(Matrix, x0, proc_line, size, rowNum, numprocs, rank);
     do {
-        DataDistribution(Matrix, x0, proc_line, size, rowNum, numprocs, rank);
         ParallelCalculate(proc_line, x0, proc_res, vectorB, size, rowNum, numprocs, rank);
         ResultReply(proc_res, result, size, numprocs, rank);
         if (rank == ROOT){
             crit = criterion(result, normB, size);
             for (int i = 1; i < numprocs; ++i) {
-                MPI_Send(&crit, 1, MPI_DOUBLE, i, 123, MPI_COMM_WORLD);
+                MPI_Send(&crit, 1, MPI_INT, i, 123, MPI_COMM_WORLD);
             }
         } else {
-            MPI_Recv(&crit, 1, MPI_DOUBLE, ROOT, 123, MPI_COMM_WORLD, &status);
+            MPI_Recv(&crit, 1, MPI_INT, ROOT, 123, MPI_COMM_WORLD, &status);
         }
         DataDistributionSub(result, x0, proc_x, proc_res, size, rowNum, numprocs, rank);
         ParallelSubtract(proc_x, result, size, rowNum, numprocs, rank);
